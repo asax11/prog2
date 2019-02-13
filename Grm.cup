@@ -35,8 +35,20 @@ terminal COMMA, COLON, SEMICOLON, LPAREN, RPAREN, LBRACK, RBRACK,
 	GT, GE, AND, OR, ASSIGN, ARRAY, IF, THEN, ELSE, WHILE, FOR, TO,
 	DO, LET, IN, END, OF, BREAK, NIL, FUNCTION, VAR, TYPE;
 
-non terminal Absyn.Exp          Exp;
-non terminal Absyn.Var          Var;
+non terminal Absyn.Exp         			Exp;
+non terminal Absyn.Var          		Var;
+non terminal Absyn.Ty					Type;
+non terminal Absyn.TypeDec      		TypeDec, Types;
+non terminal Absyn.Dec					Dec;
+non terminal Absyn.DecList				DecList;
+non terminal Absyn.NameTy 				NameType;
+non terminal Absyn.FieldList			Fields, Fields_Rec;
+non terminal Absyn.FieldExpList 		fieldExps;
+non terminal Absyn.FunctionDec	        functionDec, optFunctions;
+non terminal Absyn.ExpList				ExpList, Args, optArgs, seqExp, seqTail;
+non terminal Absyn.FieldVar				fieldVar;
+non terminal Absyn.SubscriptVar 		subscriptVar;
+non terminal Empty;
 
 start with Exp;
 
