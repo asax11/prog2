@@ -60,4 +60,149 @@ Exp ::= error:e
 
 Var ::=   ID:n
 	  {: RESULT = new Absyn.SimpleVar(nleft, sym(n)); :}
+	;package Parse;
+
+action code {: static Symbol.Symbol sym(String s) {
+	         return Symbol.Symbol.symbol(s);
+	        }
+	    :};
+
+parser code  {: 
+  Lexer lexer;
+
+  public void syntax_error(java_cup.runtime.Symbol current) {
+   report_error("Syntax error (" + current.sym + ")", current);
+  }
+
+  ErrorMsg.ErrorMsg errorMsg;
+
+  public void report_error(String message, java_cup.runtime.Symbol info) {
+      errorMsg.error(info.left, message);
+  }
+
+  public Grm(Lexer l, ErrorMsg.ErrorMsg err) {
+    this();
+    errorMsg=err;
+    lexer=l;
+  }
+:};
+
+scan with {: return lexer.nextToken(); :};
+
+terminal String ID, STRING;
+terminal Integer INT;
+terminal COMMA, COLON, SEMICOLON, LPAREN, RPAREN, LBRACK, RBRACK, 
+	LBRACE, RBRACE, DOT, PLUS, MINUS, TIMES, DIVIDE, EQ, NEQ, LT, LE, 
+	GT, GE, AND, OR, ASSIGN, ARRAY, IF, THEN, ELSE, WHILE, FOR, TO,
+	DO, LET, IN, END, OF, BREAK, NIL, FUNCTION, VAR, TYPE;
+
+non terminal Absyn.Exp         			Exp;
+non terminal Absyn.Var          		Var;
+non terminal Absyn.Ty				Ty;
+non terminal Absyn.TypeDec      TypeDec, Types;
+non terminal Absyn.Dec				Dec;
+non terminal Absyn.VarDec VarDec;
+non terminal Absyn.DecList			DecList;
+non terminal Absyn.NameTy 			NameType;
+non terminal Absyn.FieldList			Fields;
+non terminal Absyn.FieldExpList 		fieldExps;
+non terminal Absyn.FunctionDec	       		functionDec;
+non terminal Absyn.ExpList			ExpList, Args, Args2;
+non terminal Absyn.FieldVar			fieldVar;
+non terminal Absyn.SubscriptVar 		subscriptVar;
+non terminal Absyn.LetExp LetExp;
+non terminal Empty;
+
+precedence nonassoc THEN;
+precedence nonassoc ELSE;
+precedence nonassoc ASSIGN;
+precedence left     OR;
+precedence left     AND;
+precedence nonassoc EQ, NEQ, LT, LE, GT, GE;
+precedence left     PLUS, MINUS;
+precedence left TIMES, DIVIDE;
+
+start with Exp;
+
+Exp ::= error:e
+	  {: RESULT = new Absyn.SeqExp(eleft, null); :}
+	| Var:v
+	  {: RESULT = new Absyn.VarExp(vleft, v); :}
+	| Int:i
+		{: RESULT = new Absyn.IntExp(vleft, i); :}
+	| String:s
+		{: RESULT = new Absyn.StringExp(vleft, s); :}
+	| Var:v ASSIGN:azz Exp:e1
+		{: RESULT = new Absyn.AssignExp(azzleft, v, e); :}
+	| Exp:e1 PLUS:op Exp:e2
+		{: RESULT = new Absyn.OpExp(opleft, e1, op, e2); :}
+	| Exp:e1 MINUS:op Exp:e2
+		{: RESULT = new Absyn.OpExp(opleft, e1, op, e2); :}
+	| MINUS:op Exp:e1
+		{: RESULT = new Absyn.OpExp(opleft, 0, op, e2); :}
+	| Exp:e1 TIMES:op Exp:e2
+		{: RESULT = new Absyn.OpExp(opleft, e1, op, e2); :}
+	| Exp:e1 DIVIDE:op Exp:e2
+		{: RESULT = new Absyn.OpExp(opleft, e1, op, e2); :}
+	| Exp:e1 EQ:op Exp:e2
+		{: RESULT = new Absyn.OpExp(opleft, e1, op, e2); :}
+	| Exp:e1 NEQ:op Exp:e2
+		{: RESULT = new Absyn.OpExp(opleft, e1, op, e2); :}
+	| Exp:e1 LT:op Exp:e2
+		{: RESULT = new Absyn.OpExp(opleft, e1, op, e2); :}
+	| Exp:e1 LE:op Exp:e2
+		{: RESULT = new Absyn.OpExp(opleft, e1, op, e2); :}
+	| Exp:e1 GT:op Exp:e2
+		{: RESULT = new Absyn.OpExp(opleft, e1, op, e2); :}
+	| Exp:e1 GE:op Exp:e2
+		{: RESULT = new Absyn.OpExp(opleft, e1, op, e2); :}
+	| ID:i LPAREN Args:arg RPAREN
+		{: RESULT = new Absyn.CallExp(ileft, i, args); :
+	| LetExp:le
+		{: RESULT = le); :
 	;
+
+Var ::=   ID:n
+	  {: RESULT = new Absyn.SimpleVar(nleft, sym(n)); :}
+	;
+	
+ExpList ::= Exp:e1 ExpList:el
+	  {: RESULT = new Absyn.ExpList(e1, el); :}
+	| Exp:e1
+	  {: RESULT = new Absyn.ExpList(e1, null); :}
+
+;
+
+Args ::= Exp:e1 Args2:a2
+	  {: RESULT = new Absyn.ExpList(e1, a2); :}
+	;
+Args2 ::= COMMA Exp:e1 Args2:a2
+		{: RESULT = new Absyn.ExpList(e1, a2); :}
+	|
+	  {: RESULT = null; :}
+;
+LetExp ::= LET:l DecList:d IN ExpList:e END
+		{: RESULT = new Absyn.LetExp(lleft, d, new Absyn.SeqExp(eleft, e)); :}
+;
+DecList ::= Dec:d
+		{: RESULT = new Absyn.DecList(d, null); :}
+	| Dec:d DecList:dl
+		{: RESULT = new Absyn.DecList(d, dl); :}
+;
+Dec ::= VarDec:vd
+		{: RESULT = vd; :}
+	| FunctionDec:fd
+		{: RESULT = fd; :}
+	| TypeDec:td
+		{: RESULT = td; :}
+;
+VarDec ::= VAR:v ID:i ASSIGN:a NameType:nt Exp:e
+		{: RESULT = new Absyn.VarDec(vleft, sym(i), nt, e); :}
+;
+
+NameType ::= Ty:t
+		{:RESULT = new Absyn.NameTy(coleft,sym(t)); :}
+;
+SeqExp ::= LPAREN:lp ExpList:el RPAREN:rp
+		{: RESULT = new Absyn.LetExp(lleft, d, new Absyn.SeqExp(eleft, e)); :}
+;
